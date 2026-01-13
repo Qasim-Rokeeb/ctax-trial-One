@@ -118,7 +118,9 @@ export default function LoginPage() {
                 </div>
                 <p className="text-muted-foreground">Password: demo123</p>
               </div>
-            </div>
+            </div> 
+            
+             {/* here's the card details */}
           </CardContent>
         </Card>
       </div>
