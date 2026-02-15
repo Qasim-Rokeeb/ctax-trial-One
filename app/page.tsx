@@ -10,7 +10,8 @@ export default function HomePage() {
   useEffect(() => {
     const session = getSessionFromStorage()
     if (session.isAuthenticated && session.user) {
-      router.push(`/dashboard/${session.user.role}`)
+      const destination = session.user.role === "auditor" ? "/mvp/queue" : "/mvp/dashboard"
+      router.push(destination)
     } else {
       router.push("/login")
     }
