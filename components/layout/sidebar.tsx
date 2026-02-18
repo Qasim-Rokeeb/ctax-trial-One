@@ -5,29 +5,45 @@ import { usePathname, useRouter } from "next/navigation"
 import type { User } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { clearSessionFromStorage } from "@/lib/session"
-import { BarChart3, Users, TrendingUp, LogOut, Home } from "lucide-react"
+import { BarChart3, Users, TrendingUp, LogOut, FileUp, FileText, ShieldCheck, Scale } from "lucide-react"
 
 interface SidebarProps {
   user: User
 }
 
-const MENU_ITEMS = {
-  auditor: [{ label: "Work Queue", href: "/dashboard/auditor", icon: BarChart3 }],
-  supervisor: [
-    { label: "Overview", href: "/dashboard/supervisor", icon: Home },
-    { label: "Team Performance", href: "/dashboard/supervisor/team", icon: Users },
-  ],
-  executive: [
-    { label: "Dashboard", href: "/dashboard/executive", icon: TrendingUp },
-    { label: "Reports", href: "/dashboard/executive/reports", icon: BarChart3 },
-  ],
-}
+const AUDITOR_ITEMS = [
+  { label: "Work Queue", href: "/mvp/queue", icon: BarChart3 },
+  { label: "Taxpayers", href: "/mvp/taxpayers", icon: Users },
+  { label: "CIT Cases", href: "/company", icon: ShieldCheck },
+]
+
+const ADMIN_ITEMS = [
+  { label: "Dashboard", href: "/mvp/dashboard", icon: TrendingUp },
+  { label: "Taxpayers", href: "/mvp/taxpayers", icon: Users },
+  { label: "Ingestion", href: "/mvp/ingestion", icon: FileUp },
+  { label: "Reports", href: "/mvp/reports", icon: FileText },
+  { label: "CIT Overview", href: "/executive/overview", icon: ShieldCheck },
+  { label: "Legal Packs", href: "/legal/pack", icon: Scale },
+]
+
+const SUPERVISOR_ITEMS = [
+  { label: "Queue", href: "/supervisor/queue", icon: BarChart3 },
+  { label: "CIT Cases", href: "/company", icon: ShieldCheck },
+  { label: "Legal Packs", href: "/legal/pack", icon: Scale },
+]
 
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
 
-  const menuItems = MENU_ITEMS[user.role] || []
+  const menuItems =
+    user.role === "auditor"
+      ? AUDITOR_ITEMS
+      : user.role === "supervisor"
+        ? SUPERVISOR_ITEMS
+        : ADMIN_ITEMS
+
+  const isAdmin = user.role === "executive" || user.role === "supervisor"
 
   const handleLogout = () => {
     clearSessionFromStorage()
@@ -35,50 +51,48 @@ export function Sidebar({ user }: SidebarProps) {
   }
 
   return (
-    <aside className="w-64 bg-sidebar border-r border-sidebar-border h-screen flex flex-col">
-      {/* Logo */}
+    <aside className="w-72 bg-sidebar text-sidebar-foreground h-screen flex flex-col">
       <div className="p-6 border-b border-sidebar-border">
-        <Link href={`/dashboard/${user.role}`} className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-lg bg-sidebar-primary flex items-center justify-center">
-            <span className="text-sidebar-primary-foreground font-bold">CT</span>
+        <Link href={user.role === "auditor" ? "/mvp/queue" : user.role === "supervisor" ? "/supervisor/queue" : "/mvp/dashboard"} className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center font-display">
+            CT
           </div>
           <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">CTAX</h1>
-            <p className="text-xs text-muted-foreground">Tax Compliance</p>
+            <h1 className="text-lg font-semibold">CTAX</h1>
+            <p className="text-xs text-sidebar-accent-foreground">Compliance Studio</p>
           </div>
         </Link>
       </div>
 
-      {/* User Info */}
       <div className="px-6 py-4 border-b border-sidebar-border">
-        <p className="text-sm font-medium text-sidebar-foreground">{user.name}</p>
-        <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+        <p className="text-sm font-medium">{user.name}</p>
+        <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-sidebar-accent px-3 py-1 text-xs uppercase tracking-[0.2em]">
+          {user.role}
+        </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-6 space-y-2">
+      <nav className="flex-1 px-4 py-6 space-y-2">
         {menuItems.map((item) => {
           const Icon = item.icon
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
                 isActive
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-sidebar-primary/30"
                   : "text-sidebar-foreground hover:bg-sidebar-accent"
               }`}
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-sm font-medium">{item.label}</span>
+              <Icon className="h-5 w-5" />
+              <span>{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
-      {/* Logout */}
-      <div className="px-3 py-4 border-t border-sidebar-border">
+      <div className="px-4 py-4 border-t border-sidebar-border">
         <Button
           onClick={handleLogout}
           variant="ghost"
