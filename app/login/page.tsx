@@ -48,12 +48,9 @@ export default function LoginPage() {
               One-month MVP
             </div>
             <div className="space-y-3">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-                  CT
-                </div>
+              <div className="flex items-center">
                 <div>
-                  <h1 className="font-display text-4xl text-foreground">CTAX</h1>
+                  <h1 className="text-4xl font-semibold tracking-[0.08em] text-foreground">CTAX</h1>
                   <p className="text-sm text-muted-foreground">Compliance Studio</p>
                 </div>
               </div>

@@ -19,6 +19,7 @@ const AUDITOR_ITEMS = [
 
 const ADMIN_ITEMS = [
   { label: "Dashboard", href: "/mvp/dashboard", icon: TrendingUp },
+  { label: "Risk Lab", href: "/mvp/lab", icon: BarChart3 },
   { label: "Taxpayers", href: "/mvp/taxpayers", icon: Users },
   { label: "Ingestion", href: "/mvp/ingestion", icon: FileUp },
   { label: "Reports", href: "/mvp/reports", icon: FileText },
@@ -53,12 +54,9 @@ export function Sidebar({ user }: SidebarProps) {
   return (
     <aside className="w-72 bg-sidebar text-sidebar-foreground h-screen flex flex-col">
       <div className="p-6 border-b border-sidebar-border">
-        <Link href={user.role === "auditor" ? "/mvp/queue" : user.role === "supervisor" ? "/supervisor/queue" : "/mvp/dashboard"} className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center font-display">
-            CT
-          </div>
+        <Link href={user.role === "auditor" ? "/mvp/queue" : user.role === "supervisor" ? "/supervisor/queue" : "/mvp/dashboard"} className="flex items-center">
           <div>
-            <h1 className="text-lg font-semibold">CTAX</h1>
+            <h1 className="text-lg font-semibold tracking-[0.08em]">CTAX</h1>
             <p className="text-xs text-sidebar-accent-foreground">Compliance Studio</p>
           </div>
         </Link>

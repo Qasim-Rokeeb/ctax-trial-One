@@ -10,7 +10,7 @@ import { FileText, AlertCircle } from "lucide-react"
 
 interface FindingsListProps {
   findings: AuditFinding[]
-}
+} 
 
 export function FindingsList({ findings }: FindingsListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)

@@ -1,36 +1,34 @@
 export function exportToCSV(data: any[], filename: string) {
   if (data.length === 0) return
 
-  // Get headers from first object
   const headers = Object.keys(data[0])
-  
-  // Create CSV content
-  const csvContent = [
-    headers.join(','), // Header row
-    ...data.map(row => 
-      headers.map(header => {
-        const value = row[header]
-        // Escape values that contain commas or quotes
-        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-          return `"${value.replace(/"/g, '""')}"`
-        }
-        return value
-      }).join(',')
-    )
-  ].join('\n')
 
-  // Create blob and download
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
+  const escapeCell = (value: unknown) => {
+    if (value === null || value === undefined) return ""
+    const normalized = String(value).replace(/\r?\n/g, " ")
+    if (/[",]/.test(normalized)) {
+      return `"${normalized.replace(/"/g, '""')}"`
+    }
+    return normalized
+  }
+
+  const csvContent = [
+    headers.map((header) => escapeCell(header)).join(","),
+    ...data.map((row) => headers.map((header) => escapeCell(row[header])).join(",")),
+  ].join("\n")
+
+  // BOM improves compatibility with Excel and spreadsheet tools.
+  const blob = new Blob([`\uFEFF${csvContent}`], { type: "text/csv;charset=utf-8;" })
+  const link = document.createElement("a")
   const url = URL.createObjectURL(blob)
-  
-  link.setAttribute('href', url)
-  link.setAttribute('download', `${filename}.csv`)
-  link.style.visibility = 'hidden'
-  
+
+  link.setAttribute("href", url)
+  link.setAttribute("download", `${filename}.csv`)
+  link.style.visibility = "hidden"
+
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
-  
+
   URL.revokeObjectURL(url)
 }

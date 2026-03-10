@@ -1,16 +1,54 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import type { ChangeEvent } from "react"
 import { ProtectedLayout } from "@/components/layout/protected-layout"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { FileUp, CheckCircle2 } from "lucide-react"
-
-const REQUIRED_FIELDS = ["rra_id", "name", "tax_type", "sector", "annual_income"]
+import { FileUp, CheckCircle2, AlertTriangle, CircleX, CircleCheckBig } from "lucide-react"
+import { exportToCSV } from "@/lib/csv-export"
+import {
+  getRequiredIngestionFields,
+  parseCsvContent,
+  validateParsedCsv,
+  type IngestionValidationSummary,
+} from "@/lib/ingestion-validation"
 
 export default function IngestionPage() {
   const [fileName, setFileName] = useState("")
+  const [validation, setValidation] = useState<IngestionValidationSummary | null>(null)
+
+  const requiredFields = useMemo(() => getRequiredIngestionFields(), [])
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    setFileName(file?.name ?? "")
+
+    if (!file) {
+      setValidation(null)
+      return
+    }
+
+    const content = await file.text()
+    const parsed = parseCsvContent(content)
+    const summary = validateParsedCsv(parsed)
+    setValidation(summary)
+  }
+
+  const handleExportIssues = () => {
+    if (!validation || validation.issues.length === 0) return
+
+    exportToCSV(
+      validation.issues.map((issue) => ({
+        row: issue.row,
+        column: issue.column,
+        severity: issue.severity,
+        message: issue.message,
+      })),
+      `ingestion-validation-report-${new Date().toISOString().split("T")[0]}`,
+    )
+  }
 
   return (
     <ProtectedLayout allowedRoles={["executive", "supervisor"]}>
@@ -34,25 +72,30 @@ export default function IngestionPage() {
                   type="file"
                   accept=".csv"
                   className="mt-4 cursor-pointer"
-                  onChange={(event) => setFileName(event.target.files?.[0]?.name ?? "")}
+                  onChange={handleFileChange}
                 />
               </div>
 
               <div className="rounded-2xl border border-border/60 bg-background/70 p-5">
                 <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Selected file</p>
                 <p className="mt-2 text-sm text-foreground">{fileName || "No file selected"}</p>
-                <Button className="mt-4 bg-primary text-primary-foreground" disabled={!fileName}>
-                  Validate & ingest
+                <Button className="mt-4 bg-primary text-primary-foreground" disabled={!validation || validation.readiness === "blocked"}>
+                  Validate and ingest
                 </Button>
+                {validation ? (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Validation status: <span className="font-semibold text-foreground">{validation.readiness.replace("_", " ")}</span>
+                  </p>
+                ) : null}
               </div>
             </div>
           </Card>
 
           <Card className="fade-up border-border/60 bg-card/90 p-6" style={{ animationDelay: "120ms" }}>
             <h2 className="text-lg font-semibold text-foreground">Required Fields</h2>
-            <p className="mt-1 text-xs text-muted-foreground">Basic validation only.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Schema + row-level checks.</p>
             <div className="mt-4 space-y-3">
-              {REQUIRED_FIELDS.map((field) => (
+              {requiredFields.map((field) => (
                 <div key={field} className="flex items-center justify-between rounded-xl border border-border/60 bg-background/70 p-3">
                   <span className="text-sm text-foreground">{field}</span>
                   <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
@@ -62,20 +105,76 @@ export default function IngestionPage() {
           </Card>
         </section>
 
-        <section className="fade-up rounded-2xl border border-border/60 bg-card/90 p-6" style={{ animationDelay: "200ms" }}>
-          <h2 className="text-lg font-semibold text-foreground">Preview (first 5 rows)</h2>
-          <div className="mt-4 grid gap-3">
-            {[
-              "CIT-2024-001234 | TechNova Solutions | CIT | Technology | 250,000,000",
-              "CIT-2024-001235 | Global Trade Imports | VAT | Trade | 850,000,000",
-              "PIT-2024-002001 | Zainab Mohammed | Pensions | Healthcare | 45,000,000",
-              "PIT-2024-002002 | Chukwu Ifeanyi | ADT | Consulting | 32,000,000",
-              "CIT-2024-001236 | Prime Manufacturing | CIT | Manufacturing | 1,200,000,000",
-            ].map((row) => (
-              <div key={row} className="rounded-xl border border-border/60 bg-background/70 px-4 py-3 text-xs text-muted-foreground">
-                {row}
+        <section className="fade-up grid gap-4 lg:grid-cols-4" style={{ animationDelay: "180ms" }}>
+          <Card className="border-border/60 bg-card/90 p-5">
+            <p className="text-xs uppercase text-muted-foreground">Rows</p>
+            <p className="mt-2 text-3xl font-semibold text-foreground">{validation?.rowCount ?? 0}</p>
+          </Card>
+          <Card className="border-border/60 bg-card/90 p-5">
+            <p className="text-xs uppercase text-muted-foreground">Errors</p>
+            <p className="mt-2 text-3xl font-semibold text-destructive">{validation?.errors ?? 0}</p>
+          </Card>
+          <Card className="border-border/60 bg-card/90 p-5">
+            <p className="text-xs uppercase text-muted-foreground">Warnings</p>
+            <p className="mt-2 text-3xl font-semibold text-foreground">{validation?.warnings ?? 0}</p>
+          </Card>
+          <Card className="border-border/60 bg-card/90 p-5">
+            <p className="text-xs uppercase text-muted-foreground">Completeness</p>
+            <p className="mt-2 text-3xl font-semibold text-foreground">{validation?.completenessScore ?? 0}%</p>
+          </Card>
+        </section>
+
+        <section className="fade-up rounded-2xl border border-border/60 bg-card/90 p-6" style={{ animationDelay: "220ms" }}>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Validation Diagnostics</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Row-level issues, duplicate detection, and ingest readiness score.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleExportIssues} disabled={!validation || validation.issues.length === 0}>
+                Export Issues CSV
+              </Button>
+              <span
+                className={`rounded-full px-3 py-1 text-xs uppercase ${
+                  validation?.readiness === "ready"
+                    ? "bg-emerald-500/15 text-emerald-700"
+                    : validation?.readiness === "needs_attention"
+                      ? "bg-amber-500/15 text-amber-700"
+                      : "bg-destructive/15 text-destructive"
+                }`}
+              >
+                {validation ? validation.readiness.replace("_", " ") : "not validated"}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {!validation ? (
+              <div className="rounded-xl border border-border/60 bg-background/70 px-4 py-3 text-sm text-muted-foreground">
+                Upload a CSV file to run validation checks.
               </div>
-            ))}
+            ) : validation.issues.length === 0 ? (
+              <div className="flex items-center gap-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
+                <CircleCheckBig className="h-4 w-4" />
+                No issues found. Dataset is ready for ingestion.
+              </div>
+            ) : (
+              validation.issues.slice(0, 8).map((issue, index) => (
+                <div key={`${issue.row}-${issue.column}-${index}`} className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/70 px-4 py-3">
+                  {issue.severity === "error" ? (
+                    <CircleX className="mt-0.5 h-4 w-4 text-destructive" />
+                  ) : (
+                    <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />
+                  )}
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">Row {issue.row}, column {issue.column}</p>
+                    <p className="text-muted-foreground">{issue.message}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
       </div>

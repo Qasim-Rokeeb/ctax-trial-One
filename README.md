@@ -1,9 +1,27 @@
-# CTAX MVP build
+# CTAX MVP Build
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/qasim-rokeebs-projects/v0-ctax-mvp-build)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/vhbGbf1k7M4)
+CTAX is a Corporate Income Tax (CIT) risk and audit operations MVP. It simulates how a revenue authority team can triage cases, investigate taxpayers, and track audit outcomes across multiple roles.
 
-Modern tax audit dashboard MVP built with Next.js 16, Tailwind CSS v4, and shadcn-style UI primitives. The UI mirrors a professional revenue operations console: dark-neutral base, bold blues for primary actions, and motion for focus cues.
+This project focuses on the frontend experience for tax intelligence workflows, including:
+
+- `Auditors` reviewing queues and findings.
+- `Supervisors` assigning and monitoring cases.
+- `Executives` viewing portfolio-level risk and performance trends.
+- `Investigation teams` drilling into taxpayer records, evidence, and timeline context.
+
+The app is built with Next.js 16, TypeScript, Tailwind CSS v4, and shadcn-style UI primitives, using mock data to model realistic audit scenarios before backend integration.
+
+## What This Project Is About
+
+This repository is a product prototype for a digital tax compliance workspace. It demonstrates how CIT operations can be organized in one interface, from risk identification to case management and decision support.
+
+At a high level, the MVP provides:
+
+- Role-based dashboards for operational and leadership users.
+- Taxpayer detail pages with findings, risk indicators, and supporting context.
+- Case and queue views for assignment and tracking.
+- Reusable analytics components (charts, badges, tables, and status indicators).
+- A modular component architecture ready for API-backed data.
 
 ## Live links
 
@@ -17,6 +35,8 @@ Modern tax audit dashboard MVP built with Next.js 16, Tailwind CSS v4, and shadc
 - Authentication shell with protected layout and mock session handling ([components/layout/protected-layout.tsx](components/layout/protected-layout.tsx)).
 - Reusable UI kit: buttons, tabs, cards, badges, alerts, and data widgets ([components/ui](components/ui)).
 - Mock data source for taxpayers and findings to drive the UI without a backend ([lib/mock-data.ts](lib/mock-data.ts)).
+- Risk Scenario Lab for model tuning and what-if analysis with shareable scenario links ([app/mvp/lab/page.tsx](app/mvp/lab/page.tsx)).
+- CSV ingestion validation pipeline with schema checks, duplicate detection, completeness scoring, and issue export ([lib/ingestion-validation.ts](lib/ingestion-validation.ts), [app/mvp/ingestion/page.tsx](app/mvp/ingestion/page.tsx)).
 
 ## Quick start
 
