@@ -25,7 +25,7 @@ At a high level, the MVP provides:
 
 ## Live links
 
-- Deployed: **[https://vercel.com/qasim-rokeebs-projects/v0-ctax-mvp-build](https://vercel.com/qasim-rokeebs-projects/v0-ctax-mvp-build)**
+- Deployed: **[https://ctax-mvp.vercel.app/](https://ctax-mvp.vercel.app/)**
 - v0 design workspace: **[https://v0.app/chat/vhbGbf1k7M4](https://v0.app/chat/vhbGbf1k7M4)**
 
 ## Features
